@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    branches: [master]
+    tags: ['v*']
   workflow_dispatch:
     # Allow manual trigger from GitHub Actions UI
 
@@ -17,30 +17,18 @@ jobs:
       new_version: ${{ steps.version.outputs.new_version }}
       prev_version: ${{ steps.version.outputs.prev_version }}
     steps:
-      - name: Get latest release version from GitHub API
+      - name: Get version from tag
         id: version
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
-          # Use GitHub API to get the latest release
-          # gh release view exits non-zero if no releases exist
-          LATEST_RELEASE=""
-          if gh release view --repo ${{ github.repository }} --json tagName -q '.tagName' > /tmp/latest_tag 2>/dev/null; then
-            LATEST_RELEASE=$(cat /tmp/latest_tag)
+          # When triggered by a tag push, GITHUB_REF is refs/tags/vX.Y.Z
+          TAG="${GITHUB_REF#refs/tags/}"
+          if [ -z "$TAG" ] || ! echo "$TAG" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "No valid version tag found (GITHUB_REF=$GITHUB_REF), defaulting to v1.0.0"
+            TAG="v1.0.0"
           fi
-          echo "Latest release: '${LATEST_RELEASE}'"
-          echo "prev_version=${LATEST_RELEASE}" >> $GITHUB_OUTPUT
-
-          if [ -z "$LATEST_RELEASE" ] || ! echo "$LATEST_RELEASE" | grep -qE '^v?[0-9]+\.[0-9]+\.[0-9]+$'; then
-            NEW_VERSION="v1.0.0"
-          else
-            VERSION=${LATEST_RELEASE#v}
-            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-            NEW_PATCH=$((PATCH + 1))
-            NEW_VERSION="v${MAJOR}.${MINOR}.${NEW_PATCH}"
-          fi
-          echo "New version: $NEW_VERSION"
-          echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+          echo "Version: $TAG"
+          echo "new_version=${TAG}" >> $GITHUB_OUTPUT
+          echo "prev_version=" >> $GITHUB_OUTPUT
 
   # Build the native AOT binary
   build:
