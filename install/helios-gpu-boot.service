@@ -1,0 +1,55 @@
+[Unit]
+Description=Helios GPU Mode Boot Application
+After=local-fs.target systemd-modules-load.service systemd-udevd.service
+Before=graphical.target multi-user.target display-manager.service nvidia-powerd.service
+ConditionPathExists=|/sys/bus/platform/devices/asus-nb-wmi
+ConditionPathExists=|/sys/class/firmware-attributes/asus-armoury
+ConditionPathExists=|/etc/helios/backend
+# No condition for trigger file: the MUX=0 safety check must run every boot.
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/helios/helios-gpu-boot.sh
+RemainAfterExit=no
+# Internal timeouts cap each hardware write. This is the systemd backstop
+# in case those fail to fire. Must exceed the sum of internal timeouts.
+TimeoutStartSec=60
+StandardOutput=journal
+StandardError=journal
+
+# Hardening
+NoNewPrivileges=true
+LockPersonality=true
+KeyringMode=private
+RemoveIPC=true
+
+PrivateNetwork=true
+PrivateTmp=true
+PrivateIPC=true
+
+ProtectClock=true
+ProtectControlGroups=strict
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectProc=invisible
+ProtectSystem=strict
+ProtectHome=true
+
+# Writable paths for config, block artifacts, and udev socket.
+ReadWritePaths=-/etc/helios
+ReadWritePaths=/etc/modprobe.d
+ReadWritePaths=/etc/udev/rules.d
+ReadWritePaths=/run
+
+RestrictAddressFamilies=AF_UNIX AF_NETLINK
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+
+SystemCallArchitectures=native
+
+IPAddressDeny=any
+SocketBindDeny=any
+
+[Install]
+WantedBy=multi-user.target

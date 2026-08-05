@@ -1,0 +1,48 @@
+# Build outputs
+src/bin/
+src/obj/
+tests/**/bin/
+tests/**/obj/
+dist/
+build/
+
+# Audio helper (C build artifacts; sources are tracked, objects/binary are not)
+audio-helper/*.o
+audio-helper/rnnoise/*.o
+audio-helper/helios-audio
+audio-helper/tests/cs/bin/
+audio-helper/tests/cs/obj/
+
+# AppImage
+*.AppImage
+Helios.AppDir/
+appimagetool
+
+# IDE / Editor
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userprefs
+*.sln.docstates
+
+# Rider
+*.sln.iml
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+
+# NuGet (packages restored on build)
+*.nupkg
+.planning
+.opencode
+
+# Python bytecode
+__pycache__/
+*.pyc

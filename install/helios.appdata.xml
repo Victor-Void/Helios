@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>helios</id>
+  <name>Helios</name>
+  <summary>ASUS laptop control for Linux</summary>
+  <metadata_license>MIT</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <developer id="elevatech.xyz">
+    <name>utajum</name>
+  </developer>
+  <launchable type="desktop-id">helios.desktop</launchable>
+  <description>
+    <p>Performance modes, custom fan curves, GPU mode switching, battery charge limits,
+       keyboard backlight control, display refresh rate switching, and more for ASUS
+       ROG, TUF, Vivobook, and Zenbook laptops on Linux.</p>
+  </description>
+  <url type="homepage">https://github.com/Victor-Void/Helios</url>
+  <url type="bugtracker">https://github.com/Victor-Void/Helios/issues</url>
+  <url type="donation">https://buymeacoffee.com/utajum</url>
+  <content_rating type="oars-1.1" />
+  <categories>
+    <category>Settings</category>
+    <category>HardwareSettings</category>
+  </categories>
+  <provides>
+    <binary>helios</binary>
+  </provides>
+</component>

@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=Helios
+GenericName=ASUS Laptop Control
+Comment=Performance modes, fan curves, GPU switching, and more for ASUS laptops
+Exec=helios
+Icon=helios
+Terminal=false
+Categories=Settings;HardwareSettings;
+Keywords=ASUS;ROG;TUF;Zephyrus;Strix;performance;fan;GPU;keyboard;backlight;
+StartupNotify=false
+StartupWMClass=helios
+X-GNOME-Autostart-enabled=true
+X-GNOME-UsesNotifications=true

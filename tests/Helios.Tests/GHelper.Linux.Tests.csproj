@@ -1,0 +1,75 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    GPUModeControl scenario tests.
+
+    Validates every (PCI backend, raw-WMI backend, current hw state,
+    button press) combination so the UI never lies about the active GPU
+    mode and the configured backend is honoured end-to-end. The runner
+    is a plain Main(string[]) console executable so it works without
+    pulling xUnit / dotnet-test into the AOT main binary.
+
+    Build and run:
+      dotnet run -c Debug (project tests/Helios.Tests)
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Helios.Tests</RootNamespace>
+    <AssemblyName>helios-tests</AssemblyName>
+
+    <!-- NOT AOT - tests use reflection, dynamic dispatch, etc. -->
+    <PublishAot>false</PublishAot>
+    <InvariantGlobalization>false</InvariantGlobalization>
+
+    <!-- Suppress accidental TrimMode inheritance -->
+    <TrimMode>partial</TrimMode>
+
+    <!-- We don't want to compile any Avalonia .axaml from the main proj. -->
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Only compile the C# files we strictly need. Avoids dragging in
+      Avalonia UI, Skia, HID, etc. Keeps the test build fast and
+      side-effect-free.
+    -->
+    <Compile Include="*.cs" />
+
+    <Compile Include="../../src/Gpu/GPUModeControl.cs" />
+    <Compile Include="../../src/Gpu/NVidia/GpuQueryGate.cs" />
+    <Compile Include="../../src/Gpu/NVidia/NvidiaProcessScanner.cs" />
+    <!-- LinuxNvidiaGpuControl.GetTempViaNvml() NVML temp fallback + its interface -->
+    <Compile Include="../../src/Gpu/NVidia/LinuxNvidiaGpuControl.cs" />
+    <Compile Include="../../src/Platform/IGpuControl.cs" />
+    <Compile Include="../../src/Platform/ISystemIntegration.cs" />
+    <Compile Include="../../src/Platform/IHardwareControl.cs" />
+    <Compile Include="../../src/Platform/IPowerManager.cs" />
+    <Compile Include="../../src/Platform/Linux/Asus/AsusAttributes.cs" />
+    <Compile Include="../../src/Platform/Linux/Asus/AsusAttributeRange.cs" />
+    <Compile Include="../../src/Platform/Linux/SysfsHelper.cs" />
+    <!-- NixOS (gpu-helper resolve) + RyzenPower (PPT); SysfsHelper-only helpers -->
+    <Compile Include="../../src/Platform/Linux/NixOS.cs" />
+    <Compile Include="../../src/Platform/Linux/RyzenPower.cs" />
+    <!-- ImmutableOs: SysfsHelper.DefaultGpuHelperInstallPath (SteamOS sealed root) -->
+    <Compile Include="../../src/Platform/Linux/ImmutableOs.cs" />
+    <!-- LinuxAsusWmi + AsusWmiDebugfs: needed by the direct unit tests for
+         the GPU-panel visibility logic (IsGpuEcoAvailable, CanToggleGpuBackend,
+         IsPciBackendUsable, InvalidateGpuPresenceCache). The class also has a
+         heavyweight constructor that probes hwmon, but tests exercise only
+         the static helpers so we never instantiate it. -->
+    <Compile Include="../../src/Platform/Linux/Asus/LinuxAsusWmi.cs" />
+    <Compile Include="../../src/Platform/Linux/Asus/AsusWmiDebugfs.cs" />
+    <Compile Include="../../src/Helpers/AppConfig.cs" />
+    <Compile Include="../../src/Helpers/Logger.cs" />
+    <Compile Include="../../src/Helpers/MemoryHelper.cs" />
+    <!-- Labels.Get() in LinuxNvidiaGpuControl; pulls all language tables -->
+    <Compile Include="../../src/I18n/**/*.cs" />
+  </ItemGroup>
+
+</Project>
