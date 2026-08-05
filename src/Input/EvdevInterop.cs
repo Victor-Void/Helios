@@ -133,6 +133,11 @@ internal static class EvdevInterop
     public const ushort KEY_F24 = 194;
     public const ushort KEY_MAX = 0x2ff;
 
+    // LED codes (linux/input-event-codes.h)
+    public const ushort LED_NUML    = 0x00;
+    public const ushort LED_CAPSL   = 0x01;
+    public const ushort LED_SCROLLL = 0x02;
+
     /// <summary>The 12 default-mapped function keys, in F1..F12 order.</summary>
     public static readonly ushort[] FunctionKeys =
     {
@@ -185,6 +190,7 @@ internal static class EvdevInterop
 
     public static readonly uint UI_SET_EVBIT = IOW('U', 100, sizeof(int));
     public static readonly uint UI_SET_KEYBIT = IOW('U', 101, sizeof(int));
+    public static readonly uint UI_SET_LEDBIT = IOW('U', 102, sizeof(int));
     public static readonly uint UI_DEV_CREATE = IO('U', 1);
     public static readonly uint UI_DEV_DESTROY = IO('U', 2);
 

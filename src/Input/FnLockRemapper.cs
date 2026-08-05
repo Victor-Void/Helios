@@ -41,7 +41,7 @@ public sealed class FnLockRemapper : IDisposable
     private volatile bool _running;
     private Dictionary<ushort, FnLockTarget> _activeMap = new();
 
-    // Toggle-hotkey state machine. Default: Super (LEFTMETA) + F8.
+    // Toggle-hotkey state machine. Default: Super (LEFTMETA) + F2.
     private ushort _toggleModifier = EvdevInterop.KEY_LEFTMETA;
     private ushort _toggleKey = EvdevInterop.KEY_F2;
     private bool _modifierDown;
@@ -290,11 +290,14 @@ public sealed class FnLockRemapper : IDisposable
             return false;
         }
 
-        // Declare event types. EV_REP signals key-repeat support so libinput
-        // and compositors classify us as a real keyboard, not a hotkey HID.
+        // Declare event types. EV_REP signals key-repeat support and EV_LED
+        // signals LED indicators (Caps/Num/Scroll lock). Both are required
+        // for libinput compositors (Hyprland) to classify us as a real
+        // keyboard and dispatch global modifier shortcuts (Super+D, etc.).
         if (EvdevInterop.ioctl_int(fd, EvdevInterop.UI_SET_EVBIT, EvdevInterop.EV_KEY) < 0
             || EvdevInterop.ioctl_int(fd, EvdevInterop.UI_SET_EVBIT, EvdevInterop.EV_SYN) < 0
-            || EvdevInterop.ioctl_int(fd, EvdevInterop.UI_SET_EVBIT, EvdevInterop.EV_REP) < 0)
+            || EvdevInterop.ioctl_int(fd, EvdevInterop.UI_SET_EVBIT, EvdevInterop.EV_REP) < 0
+            || EvdevInterop.ioctl_int(fd, EvdevInterop.UI_SET_EVBIT, EvdevInterop.EV_LED) < 0)
         {
             Logger.WriteLine("FnLockRemapper: UI_SET_EVBIT failed");
             EvdevInterop.close(fd);
@@ -322,6 +325,13 @@ public sealed class FnLockRemapper : IDisposable
         };
         foreach (var k in extraKeys)
             EvdevInterop.ioctl_int(fd, EvdevInterop.UI_SET_KEYBIT, k);
+
+        // Declare standard keyboard LEDs so libinput compositors (Hyprland)
+        // recognise us as a genuine keyboard and route global modifier
+        // shortcuts (Super+D, etc.) through the virtual device.
+        EvdevInterop.ioctl_int(fd, EvdevInterop.UI_SET_LEDBIT, EvdevInterop.LED_NUML);
+        EvdevInterop.ioctl_int(fd, EvdevInterop.UI_SET_LEDBIT, EvdevInterop.LED_CAPSL);
+        EvdevInterop.ioctl_int(fd, EvdevInterop.UI_SET_LEDBIT, EvdevInterop.LED_SCROLLL);
 
         // Build uinput_user_dev and write() it (legacy creation path).
         var udev = new EvdevInterop.UinputUserDev
