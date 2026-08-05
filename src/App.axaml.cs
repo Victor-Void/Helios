@@ -153,6 +153,9 @@ public class App : Application
         // Initialize i18n before any UI
         Labels.Initialize();
 
+        // Load Material You palette from the Quickshell dotfiles' colors.json
+        UI.Themes.HeliosThemeLoader.Initialize();
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             // Keep running when window is closed (tray icon keeps app alive)
