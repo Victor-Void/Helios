@@ -1,5 +1,7 @@
 # Helios
 
+<p align="center"><img src="install/helios.png" width="128" alt="Helios logo"></p>
+
 Lightweight ASUS laptop control utility for Linux.
 
 Performance modes, custom fan curves, GPU mode switching, battery charge
