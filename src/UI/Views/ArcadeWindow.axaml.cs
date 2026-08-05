@@ -717,6 +717,7 @@ public partial class ArcadeWindow : Window, Input.IGamepadInput
                         _enemies.RemoveAt(i);
                     }
                 }
+                break;
             case PowerUpType.Magnet:
                 _magnetTimer = 480;
                 break; // 8 sec
