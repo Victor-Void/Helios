@@ -9,7 +9,7 @@
         WindowStartupLocation="CenterScreen"
         CanResize="False"
         Background="#1C1C1C"
-        Icon="avares://helios/UI/Assets/standard.ico">
+        Icon="avares://helios/UI/Assets/standard.png">
 
     <StackPanel Margin="16" Spacing="12">
 

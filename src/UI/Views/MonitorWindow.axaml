@@ -9,7 +9,7 @@
         MinHeight="600"
         WindowStartupLocation="CenterScreen"
         Background="#1C1C1C"
-        Icon="avares://helios/UI/Assets/standard.ico">
+        Icon="avares://helios/UI/Assets/standard.png">
 
     <Grid RowDefinitions="Auto,*,*,*" Margin="10">
 

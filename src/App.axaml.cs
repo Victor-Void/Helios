@@ -691,7 +691,7 @@ public class App : Application
             // Load tray icon from embedded assets
             try
             {
-                string iconName = AppConfig.IsBWIcon() ? "dark-standard.ico" : "standard.ico";
+                string iconName = AppConfig.IsBWIcon() ? "dark-standard.png" : "standard.png";
                 var uri = new Uri($"avares://helios/UI/Assets/{iconName}");
                 trayIcon.Icon = new WindowIcon(AssetLoader.Open(uri));
             }
@@ -743,10 +743,10 @@ public class App : Application
             // Select icon based on base mode and B&W preference
             string iconName = baseMode switch
             {
-                0 => bw ? "dark-standard.ico" : "standard.ico",   // Balanced
-                1 => bw ? "dark-standard.ico" : "ultimate.ico",   // Turbo (no dark-ultimate, use dark-standard)
-                2 => bw ? "dark-eco.ico" : "eco.ico",        // Silent
-                _ => bw ? "dark-standard.ico" : "standard.ico"
+                0 => bw ? "dark-standard.png" : "standard.png",   // Balanced
+                1 => bw ? "dark-standard.png" : "ultimate.png",   // Turbo (no dark-ultimate, use dark-standard)
+                2 => bw ? "dark-eco.png" : "eco.png",        // Silent
+                _ => bw ? "dark-standard.png" : "standard.png"
             };
 
             try

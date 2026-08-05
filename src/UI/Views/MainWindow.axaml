@@ -11,7 +11,7 @@
         CanResize="True"
         WindowDecorations="Full"
         Background="#1C1C1C"
-        Icon="avares://helios/UI/Assets/favicon.ico">
+        Icon="avares://helios/UI/Assets/favicon.png">
 
     <Window.Styles>
         <!-- Active button gets accent border (perf, GPU, screen modes) -->

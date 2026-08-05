@@ -8,7 +8,7 @@
         CanResize="False"
         WindowStartupLocation="CenterScreen"
         Background="#1C1C1C"
-        Icon="avares://helios/UI/Assets/standard.ico"
+        Icon="avares://helios/UI/Assets/standard.png"
         Focusable="True">
 
     <Canvas x:Name="gameCanvas" Background="#0A0A0A"

@@ -11,7 +11,7 @@
         WindowStartupLocation="CenterScreen"
         CanResize="True"
         Background="#1C1C1C"
-        Icon="avares://helios/UI/Assets/standard.ico">
+        Icon="avares://helios/UI/Assets/standard.png">
 
     <Window.Styles>
         <Style Selector="ScrollBar:vertical">

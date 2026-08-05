@@ -11,7 +11,7 @@
         CanResize="True"
         Focusable="False"
         Background="#F0181B20"
-        Icon="avares://helios/UI/Assets/favicon.ico">
+        Icon="avares://helios/UI/Assets/favicon.png">
     <Grid RowDefinitions="Auto,Auto,*">
         <Grid Grid.Row="0" x:Name="dragBar" Background="Transparent"
               ColumnDefinitions="Auto,*,Auto,Auto" Height="36"

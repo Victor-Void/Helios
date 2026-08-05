@@ -8,7 +8,7 @@
         MinHeight="500"
         WindowStartupLocation="CenterScreen"
         Background="#1C1C1C"
-        Icon="avares://helios/UI/Assets/standard.ico">
+        Icon="avares://helios/UI/Assets/standard.png">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="10" Spacing="5">

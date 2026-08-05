@@ -8,7 +8,7 @@
         WindowStartupLocation="CenterOwner"
         Background="#1C1C1C"
         Title="Confirm"
-        Icon="avares://helios/UI/Assets/standard.ico">
+        Icon="avares://helios/UI/Assets/standard.png">
 
     <Border Margin="20">
         <StackPanel Spacing="14">
