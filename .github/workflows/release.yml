@@ -217,52 +217,45 @@ jobs:
           tag_name: ${{ needs.version.outputs.new_version }}
           name: Release ${{ needs.version.outputs.new_version }}
           body: |
-            ## Helios Linux ${{ needs.version.outputs.new_version }}
+            ## Helios ${{ needs.version.outputs.new_version }}
 
-            ![helios Downloads](https://img.shields.io/github/downloads/Victor-Void/Helios/${{ needs.version.outputs.new_version }}/helios?style=flat-square&label=helios%20downloads)
-            ![AppImage Downloads](https://img.shields.io/github/downloads/Victor-Void/Helios/${{ needs.version.outputs.new_version }}/Helios-x86_64.AppImage?style=flat-square&label=appimage%20downloads)
-
-            ### Commits
+            ### Changelog
             ${{ steps.changelog.outputs.changelog }}
 
-            ### Quick Install
+            ### Download
 
             ```bash
-            curl -sL https://raw.githubusercontent.com/${{ github.repository }}/master/install/install.sh | sudo bash
+            gh release download ${{ needs.version.outputs.new_version }} \
+              --repo ${{ github.repository }} \
+              --pattern 'helios' \
+              --pattern 'Helios-x86_64.AppImage' \
+              --pattern '90-helios.rules'
+            chmod +x helios Helios-x86_64.AppImage
             ```
 
-            ### Quick Uninstall
+            ### Install
 
             ```bash
-            curl -sL https://raw.githubusercontent.com/${{ github.repository }}/master/install/install.sh | sudo bash -s -- --uninstall
+            sudo cp helios /opt/helios/helios
+            sudo chmod +x /opt/helios/helios
+            sudo ln -sf /opt/helios/helios /usr/local/bin/helios
+            sudo cp 90-helios.rules /etc/udev/rules.d/90-helios.rules
+            sudo udevadm control --reload-rules && sudo udevadm trigger
             ```
 
-            Removes system files. User config in `~/.config/helios` is preserved.
-
-            ### AppImage
-
-            Download `Helios-x86_64.AppImage`, make it executable, and run:
+            ### Uninstall
 
             ```bash
-            chmod +x Helios-x86_64.AppImage
-            ./Helios-x86_64.AppImage
+            sudo rm -f /opt/helios/helios /usr/local/bin/helios
+            sudo rm -f /etc/udev/rules.d/90-helios.rules
+            sudo systemctl stop helios-gpu-boot.service 2>/dev/null
+            sudo systemctl disable helios-gpu-boot.service 2>/dev/null
+            sudo rm -f /etc/systemd/system/helios-gpu-boot.service
+            sudo rm -rf /usr/local/lib/helios /etc/helios
+            sudo systemctl daemon-reload
             ```
 
-            ### Manual Install
-
-            Download `helios`, make it executable, and run:
-
-            ```bash
-            chmod +x helios
-            ./helios
-            ```
-
-            > **Note:** udev rules are required for hardware access without root. The quick install script handles this automatically. For AppImage or manual installs:
-            >
-            > ```bash
-            > sudo curl -sL https://github.com/${{ github.repository }}/releases/download/${{ needs.version.outputs.new_version }}/90-helios.rules -o /etc/udev/rules.d/90-helios.rules
-            > sudo udevadm control --reload-rules && sudo udevadm trigger
-            > ```
+            User config in `~/.config/helios` is preserved.
 
             ---
             *Auto-generated release from commit ${{ github.sha }}*

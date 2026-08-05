@@ -6,7 +6,7 @@ set -euo pipefail
 # ║  Downloads latest release + installs system-wide                            ║
 # ║  100% idempotent — safe to re-run infinitely                                ║
 # ║                                                                              ║
-# ║  Install:    curl -sL https://raw.githubusercontent.com/Victor-Void/Helios/master/install/install.sh | sudo bash
+# ║  Install:    curl -sL https://raw.githubusercontent.com/Victor-Void/Helios/main/install/install.sh | sudo bash
 # ║  AppImage:   curl -sL ... | sudo bash -s -- --appimage                       ║
 # ║  Uninstall:  curl -sL ... | sudo bash -s -- --uninstall                      ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
@@ -234,7 +234,7 @@ REAL_USER=$(logname 2>/dev/null || echo "${SUDO_USER:-}")
 GH_NIX_ROOT="/etc/nixos/helios"
 GH_NIX_WRAPPER="/etc/nixos/helios.nix"
 GH_NIX_CONF="/etc/nixos/configuration.nix"
-RAW="https://raw.githubusercontent.com/$REPO/master"
+RAW="https://raw.githubusercontent.com/$REPO/main"
 
 _gh_nix_inject() {
     if grep -q '/etc/nixos/helios.nix' "$GH_NIX_CONF"; then
@@ -489,7 +489,7 @@ done
 for file in "${ASSETS[@]}"; do
     ((dl_count++)) || true
     _progress_bar "$dl_count" "$dl_total" "Fetching $file..."
-    if ! curl -fsSL "https://raw.githubusercontent.com/$REPO/master/install/$file" -o "$WORK_DIR/$file" 2>/dev/null; then
+    if ! curl -fsSL "https://raw.githubusercontent.com/$REPO/main/install/$file" -o "$WORK_DIR/$file" 2>/dev/null; then
         echo ""
         _fail "Download failed: $file"
         exit 1
@@ -855,7 +855,7 @@ if [[ "$MODE" == "appimage" ]]; then
     _typeout "${YELLOW}${BOLD}  > HARDWARE ACCESS LAYER READY :: Launch your AppImage now${RESET}" 0.03
     echo ""
     echo "  ${DIM}To uninstall:${RESET}"
-    echo "  ${DIM}curl -sL https://raw.githubusercontent.com/Victor-Void/Helios/master/install/install.sh | sudo bash -s -- --uninstall${RESET}"
+    echo "  ${DIM}curl -sL https://raw.githubusercontent.com/Victor-Void/Helios/main/install/install.sh | sudo bash -s -- --uninstall${RESET}"
 else
     echo "${GREEN}${BOLD}  ╔════════════════════════════════════════════════════════════════╗${RESET}"
     echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
@@ -879,7 +879,7 @@ else
     _typeout "${GREEN}${BOLD}  > NEURAL LINK ESTABLISHED :: LAUNCH WITH: helios${RESET}" 0.03
     echo ""
     echo "  ${DIM}To uninstall:${RESET}"
-    echo "  ${DIM}curl -sL https://raw.githubusercontent.com/Victor-Void/Helios/master/install/install.sh | sudo bash -s -- --uninstall${RESET}"
+    echo "  ${DIM}curl -sL https://raw.githubusercontent.com/Victor-Void/Helios/main/install/install.sh | sudo bash -s -- --uninstall${RESET}"
 fi
 
 echo ""

@@ -25,34 +25,38 @@ Built for ASUS ROG, TUF, Vivobook, Zenbook, and ProArt laptops.
 
 ## Install
 
-### Quick install (recommended)
-
 ```bash
-curl -sL https://raw.githubusercontent.com/Victor-Void/Helios/master/install/install.sh | sudo bash
+gh release download --repo Victor-Void/Helios \
+  --pattern 'helios' \
+  --pattern 'Helios-x86_64.AppImage' \
+  --pattern '90-helios.rules'
+
+chmod +x helios Helios-x86_64.AppImage
+
+# System-wide install
+sudo cp helios /opt/helios/helios
+sudo chmod +x /opt/helios/helios
+sudo ln -sf /opt/helios/helios /usr/local/bin/helios
+sudo cp 90-helios.rules /etc/udev/rules.d/90-helios.rules
+sudo udevadm control --reload-rules && sudo udevadm trigger
 ```
 
-### AppImage
-
-Download `Helios-x86_64.AppImage` from the [latest release](https://github.com/Victor-Void/Helios/releases/latest):
+Or run the AppImage directly:
 
 ```bash
-chmod +x Helios-x86_64.AppImage
 ./Helios-x86_64.AppImage
-```
-
-### Manual
-
-```bash
-curl -sL https://github.com/Victor-Void/Helios/releases/latest/download/helios -o helios
-chmod +x helios
-sudo ./install/install.sh  # installs udev rules for hardware access
-./helios
 ```
 
 ## Uninstall
 
 ```bash
-curl -sL https://raw.githubusercontent.com/Victor-Void/Helios/master/install/install.sh | sudo bash -s -- --uninstall
+sudo rm -f /opt/helios/helios /usr/local/bin/helios
+sudo rm -f /etc/udev/rules.d/90-helios.rules
+sudo systemctl stop helios-gpu-boot.service 2>/dev/null || true
+sudo systemctl disable helios-gpu-boot.service 2>/dev/null || true
+sudo rm -f /etc/systemd/system/helios-gpu-boot.service
+sudo rm -rf /usr/local/lib/helios /etc/helios
+sudo systemctl daemon-reload
 ```
 
 ## Build
