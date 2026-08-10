@@ -77,9 +77,6 @@ jobs:
             const runId = process.env.BUILD_RUN_ID;
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}`;
 
-            const nightlyBase = `https://nightly.link/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}`;
-            const zipName = `Helios-pr-${prNum}`;
-
             const marker = '<!-- pr-build-artifacts -->';
             const body = [
               marker,
@@ -87,9 +84,7 @@ jobs:
               '',
               `Built from commit \`${sha}\` — version \`${version}\``,
               '',
-              `**[Download ${zipName}.zip](${nightlyBase}/${zipName}.zip)**`,
-              '',
-              `> [View on GitHub Actions](${runUrl}) (requires login)`,
+              `**[View on GitHub Actions](${runUrl})** → scroll to Artifacts at the bottom to download`,
               '',
               '---',
               '',
@@ -105,9 +100,11 @@ jobs:
               '',
               '---',
               '',
-              '**Quick test (download + extract):**',
+              '**Quick test:**',
               '```bash',
-              `wget ${nightlyBase}/${zipName}.zip && unzip ${zipName}.zip -d ${zipName} && cd ${zipName}`,
+              '# Download from the GitHub Actions run page above, then:',
+              'chmod +x helios',
+              './helios',
               '```',
               '',
               '**Option A — AppImage (easiest):**',
