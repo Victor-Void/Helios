@@ -16,9 +16,9 @@ namespace Helios.UI.Views;
 public partial class ChangelogWindow : Window
 {
     private const string ChangelogUrl =
-        "https://raw.githubusercontent.com/Victor-Void/Helios/master/CHANGELOG.md";
+        "https://raw.githubusercontent.com/Victor-Void/Helios/main/CHANGELOG.md";
     private const string ChangelogBrowserUrl =
-        "https://github.com/Victor-Void/Helios/blob/master/CHANGELOG.md";
+        "https://github.com/Victor-Void/Helios/blob/main/CHANGELOG.md";
     private const string EmbeddedResourceName = "Helios.CHANGELOG.md";
 
     private readonly List<Bitmap> _bitmapSink = new();
@@ -44,13 +44,18 @@ public partial class ChangelogWindow : Window
 
     private async Task LoadAsync()
     {
-        string? markdown = await FetchRemoteAsync();
-        string source = "network";
-        if (markdown == null)
+        // Load the embedded changelog immediately (no network delay on private repos).
+        string? markdown = LoadEmbedded();
+        string source = "embedded";
+
+        // Optionally refresh from remote in the background (public repos only).
+        var remote = await FetchRemoteAsync();
+        if (remote != null)
         {
-            markdown = LoadEmbedded();
-            source = "embedded";
+            markdown = remote;
+            source = "network";
         }
+
         if (markdown == null)
         {
             await Dispatcher.UIThread.InvokeAsync(() => ShowError(Labels.Get("changelog_load_failed")));
