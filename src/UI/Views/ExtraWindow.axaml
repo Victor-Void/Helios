@@ -13,22 +13,6 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="10" Spacing="5">
 
-            <!-- LANGUAGE -->
-            <Border Classes="panel">
-                <StackPanel>
-                    <Border Classes="panel-header" Margin="0,0,0,8">
-                        <TextBlock x:Name="labelLanguageHeader" Classes="header" Text="Language" />
-                    </Border>
-                    <Grid ColumnDefinitions="120,*" Margin="0,4">
-                        <TextBlock Grid.Column="0" x:Name="labelLanguageLabel" Text="Language"
-                                   Classes="label-dim" VerticalAlignment="Center" />
-                        <ComboBox Grid.Column="1" x:Name="comboLanguage"
-                                  HorizontalAlignment="Stretch"
-                                  SelectionChanged="ComboLanguage_Changed" />
-                    </Grid>
-                </StackPanel>
-            </Border>
-
             <!-- APPEARANCE -->
             <Border Classes="panel">
                 <StackPanel>
@@ -702,6 +686,11 @@
                                    HorizontalAlignment="Center"
                                    VerticalAlignment="Center" />
                     </Grid>
+                    <!-- Boot parameter hint. Selectable so it can be copied. -->
+                    <SelectableTextBlock x:Name="labelXgmPciePmHint"
+                                         Classes="label-dim" FontSize="10"
+                                         TextWrapping="Wrap" TextTrimming="None"
+                                         Text="" Margin="0,8,0,0" />
                 </StackPanel>
             </Border>
 

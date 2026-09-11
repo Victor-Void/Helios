@@ -530,10 +530,6 @@ public static class English
         ["cpu_cores_info"] = "{0} of {1} threads active",
         ["kernel_warning"] = "\u26A0 Kernel 6.2+ recommended for full feature support",
 
-        // LANGUAGE
-        ["language_header"] = "Language",
-        ["language_auto"] = "Auto (system)",
-
         // APPEARANCE
         ["appearance_header"] = "Appearance",
         ["icon_set_label"] = "Icon Set",
@@ -891,6 +887,7 @@ public static class English
         ["xgm_extra_header"] = "XG Mobile Dock",
         ["xgm_extra_lights_label"] = "Dock lights",
         ["xgm_extra_brightness_label"] = "Brightness",
+        ["xgm_pcie_pm_hint"] = "If live switching hangs, add pcie_port_pm=off to the kernel command line.",
         ["xgm_fan"] = "XG Mobile Fan",
 
         // Reusable confirm-dialog buttons (used by ConfirmDialog and any

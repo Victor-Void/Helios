@@ -41,7 +41,6 @@ public partial class ExtraWindow : Window
         Loaded += (_, _) =>
         {
             _suppressEvents = true;
-            InitLanguage();
             InitAppearance();
             InitKeyboardBacklight();
             InitKeyBindings();
@@ -65,46 +64,6 @@ public partial class ExtraWindow : Window
         {
             _brightnessTimer?.Stop();
         };
-    }
-
-    // LANGUAGE
-
-    private void InitLanguage()
-    {
-        comboLanguage.Items.Clear();
-
-        // First item: Auto (system locale)
-        comboLanguage.Items.Add(new ComboBoxItem { Content = Labels.Get("language_auto"), Tag = "" });
-
-        // All available languages
-        int selectedIdx = 0;
-        int idx = 1;
-        string? savedLang = Helpers.AppConfig.GetString("language");
-
-        foreach (var (code, name) in Labels.AvailableLanguages)
-        {
-            comboLanguage.Items.Add(new ComboBoxItem { Content = name, Tag = code });
-            if (!string.IsNullOrEmpty(savedLang) && code == savedLang)
-                selectedIdx = idx;
-            idx++;
-        }
-
-        comboLanguage.SelectedIndex = selectedIdx;
-    }
-
-    private void ComboLanguage_Changed(object? sender, SelectionChangedEventArgs e)
-    {
-        if (_suppressEvents)
-            return;
-        if (comboLanguage.SelectedItem is not ComboBoxItem item)
-            return;
-
-        string code = item.Tag as string ?? "";
-
-        if (string.IsNullOrEmpty(code))
-            Labels.ResetToAuto();
-        else
-            Labels.SetLanguage(code);
     }
 
     // APPEARANCE (icon set)
@@ -153,10 +112,6 @@ public partial class ExtraWindow : Window
     private void ApplyLabels()
     {
         Title = Labels.Get("extra_title");
-
-        // Language section
-        labelLanguageHeader.Text = Labels.Get("language_header");
-        labelLanguageLabel.Text = Labels.Get("language_header");
 
         // Appearance section
         labelAppearanceHeader.Text = Labels.Get("appearance_header");
@@ -224,6 +179,7 @@ public partial class ExtraWindow : Window
         labelXgmHeader.Text = Labels.Get("xgm_extra_header");
         checkXGMLights.Content = Labels.Get("xgm_extra_lights_label");
         labelXgmBrightnessLabel.Text = Labels.Get("xgm_extra_brightness_label");
+        labelXgmPciePmHint.Text = Labels.Get("xgm_pcie_pm_hint");
         InitXgmPanel();
         checkNvidiaPowerdBattery.Content = Labels.Get("nvidia_powerd_battery");
         InitNvidiaPowerdBattery();
@@ -310,7 +266,6 @@ public partial class ExtraWindow : Window
         // Rebuild combo items with new language strings
         RefreshSpeedCombo();
         RefreshKeyBindingCombos();
-        RefreshLanguageComboAuto();
 
         // Refresh dynamic content with new labels
         RefreshSystemInfo();
@@ -339,13 +294,6 @@ public partial class ExtraWindow : Window
     {
         foreach (var (combo, bindingName) in _keyBindingCombos)
             PopulateKeyBindingCombo(combo, bindingName);
-    }
-
-    /// <summary>Update the "Auto (system)" label in the language combo.</summary>
-    private void RefreshLanguageComboAuto()
-    {
-        if (comboLanguage.Items.Count > 0 && comboLanguage.Items[0] is ComboBoxItem first)
-            first.Content = Labels.Get("language_auto");
     }
 
     // KEYBOARD BACKLIGHT
@@ -2593,7 +2541,7 @@ public partial class ExtraWindow : Window
     private void InitXgmPanel()
     {
         bool present = USB.XGM.IsLightAvailable();
-        panelXGM.IsVisible = present;
+        panelXGM.IsVisible = present || Helpers.AppConfig.Is("show_xgm_dev");
         if (!present)
             return;
 

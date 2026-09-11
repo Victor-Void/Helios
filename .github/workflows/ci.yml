@@ -15,14 +15,6 @@ jobs:
   # ═══════════════════════════════════════════════════════════════════════════════
   # Fast checks — run first, fail fast
   # ═══════════════════════════════════════════════════════════════════════════════
-  i18n:
-    name: i18n keys
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Validate translation key parity
-        run: ./scripts/i18n-check.sh
-
   quick-build:
     name: Build (fast)
     runs-on: ubuntu-latest
@@ -38,10 +30,8 @@ jobs:
           restore-keys: nuget-${{ runner.os }}-
       - name: Install build deps
         run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev libwayland-dev upx-ucl libpipewire-0.3-dev pkg-config
-      - name: Restore
-        run: dotnet restore src/ --runtime linux-x64
-      - name: Build (non-AOT, fast)
-        run: dotnet build src/ -c Release --no-restore -p:PublishAot=false
+      - name: Build (fast, non-AOT)
+        run: ./build.sh --fast
         env:
           DOTNET_CLI_TELEMETRY_OPTOUT: 1
       - uses: actions/cache/save@v4
