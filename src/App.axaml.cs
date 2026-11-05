@@ -200,6 +200,10 @@ public class App : Application
             // Start hotkey listener
             StartHotkeyListener();
 
+            // Restore Fn Lock after the UI and input services are ready.
+            if (AppConfig.Is("fnlock_enabled"))
+                StartFnLock(AppConfig.Get("fnlock_on", 1) == 1);
+
             // Command socket for follow-up "helios --osk" invocations, and
             // the keyboard itself when this startup was osk-initiated.
             CommandIpc.StartServer(cmd =>
@@ -218,6 +222,9 @@ public class App : Application
 
             // Re-apply saved battery charge limit on startup
             Battery.BatteryControl.AutoBattery(init: true);
+
+            // Re-apply auto refresh rate on startup (backends spawn xrandr)
+            Task.Run(() => AutoScreen(init: true));
 
             // Init fan sensor defaults for model-specific RPM formatting
             Fan.FanSensorControl.InitFanMax();
@@ -624,9 +631,9 @@ public class App : Application
     /// <summary>
     /// Auto-switch screen refresh rate based on AC/battery power.
     /// AC → max refresh + overdrive ON, Battery → 60Hz + overdrive OFF.
-    /// Called on power state change and when user enables auto mode.
+    /// Called on power state change, at startup, and when user enables auto mode.
     /// </summary>
-    public void AutoScreen()
+    public void AutoScreen(bool init = false)
     {
         if (!AppConfig.Is("screen_auto"))
         {
@@ -651,7 +658,8 @@ public class App : Application
             Wmi?.SetPanelOverdrive(true);
             AppConfig.Set("panel_od", 1);
             Logger.WriteLine($"AutoScreen: AC power -> {maxHz}Hz + overdrive ON");
-            System?.ShowNotification(Labels.Get("display"), Labels.Format("auto_screen_ac", maxHz), "video-display");
+            if (!init)
+                System?.ShowNotification(Labels.Get("display"), Labels.Format("auto_screen_ac", maxHz), "video-display");
         }
         else
         {
@@ -659,7 +667,8 @@ public class App : Application
             Wmi?.SetPanelOverdrive(false);
             AppConfig.Set("panel_od", 0);
             Logger.WriteLine("AutoScreen: Battery -> 60Hz + overdrive OFF");
-            System?.ShowNotification(Labels.Get("display"), Labels.Get("auto_screen_battery"), "video-display");
+            if (!init)
+                System?.ShowNotification(Labels.Get("display"), Labels.Get("auto_screen_battery"), "video-display");
         }
 
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
@@ -1375,15 +1384,19 @@ public class App : Application
 
     /// <summary>
     /// Starts or stops the remapper and refreshes MainWindow button + tray menu header.
-    /// State is held entirely in <see cref="FnLock"/>.IsActive - there is no
-    /// persisted enable flag, matching Windows counterpart's "off by default"
+    /// Remembers explicit user changes; shutdown and internal restarts do not
+    /// clear the saved preference. New installations still default to off.
     /// </summary>
     public static void SetFnLockEnabled(bool enabled)
     {
         if (enabled)
             StartFnLock();
         else
+        {
             StopFnLock();
+            AppConfig.Set("fnlock_enabled", 0);
+            AppConfig.Flush();
+        }
         RefreshTrayFnLockHeader();
     }
 
@@ -1407,18 +1420,27 @@ public class App : Application
     /// <summary>
     /// Start the software fn-lock remapper. Reads saved hotkey from config
     /// and wires OSD/tray refresh callbacks. Idempotent; returns early if
-    /// already running.
+    /// already running. <paramref name="fnLockOn"/> is the initial mode;
+    /// startup passes the saved one, UI callers force media keys.
     /// </summary>
-    public static void StartFnLock()
+    public static void StartFnLock(bool fnLockOn = true)
     {
         if (FnLock != null && FnLock.IsActive)
+        {
+            // The hotkey can leave the remapper running in F-key passthrough.
+            FnLock.FnLockOn = true;
             return;
+        }
 
         if (FnLock == null)
         {
             FnLock = new FnLockRemapper();
             FnLock.FnLockChanged += isOn =>
             {
+                // Save hotkey changes, but not the provisional startup state
+                // or its rollback when grabbing the keyboard fails.
+                if (FnLock.IsActive)
+                    SaveFnLockOn(isOn);
                 string title = Labels.Get("fnlock_tray_label");
                 string body = isOn ? Labels.Get("fnlock_osd_on") : Labels.Get("fnlock_osd_off");
                 System?.ShowNotification(title, body, "preferences-desktop-keyboard");
@@ -1448,10 +1470,10 @@ public class App : Application
             return;
         }
 
-        // User clicked to turn fn-lock ON, so start in media-keys mode. The
-        // remapper boolean defaults to false at construction; we set it
+        // UI callers start in media-keys mode; startup restores the saved one.
+        // The remapper boolean defaults to false at construction; we set it
         // explicitly here so the OSD/tray reflect ON immediately on first start.
-        FnLock.FnLockOn = true;
+        FnLock.FnLockOn = fnLockOn;
         FnLock.SetToggleHotkey(
             (ushort)AppConfig.Get("fnlock_modifier", EvdevInterop.KEY_LEFTMETA),
             (ushort)AppConfig.Get("fnlock_key", EvdevInterop.KEY_F2));
@@ -1474,10 +1496,20 @@ public class App : Application
             return;
         }
 
+        AppConfig.Set("fnlock_enabled", 1);
+        SaveFnLockOn(FnLock.FnLockOn);
+
         // Make sure the main-window button + tray menu header show up immediately.
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             MainWindowInstance?.RefreshFnLockButton());
         RefreshTrayFnLockHeader();
+    }
+
+    private static void SaveFnLockOn(bool on)
+    {
+        AppConfig.Set("fnlock_on", on ? 1 : 0);
+        // Preserve the choice even if logout follows before the debounce timer.
+        AppConfig.Flush();
     }
 
     /// <summary>Stop and release the fn-lock remapper. Idempotent.</summary>
