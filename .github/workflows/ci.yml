@@ -19,11 +19,11 @@ jobs:
     name: Build (fast)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0'
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         with:
           path: ~/.nuget/packages
           key: nuget-${{ runner.os }}-${{ hashFiles('src/Helios.csproj') }}
@@ -34,7 +34,7 @@ jobs:
         run: ./build.sh --fast
         env:
           DOTNET_CLI_TELEMETRY_OPTOUT: 1
-      - uses: actions/cache/save@v4
+      - uses: actions/cache/save@v6
         with:
           path: ~/.nuget/packages
           key: nuget-${{ runner.os }}-${{ hashFiles('src/Helios.csproj') }}
@@ -47,8 +47,8 @@ jobs:
     needs: [quick-build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0'
       - name: Restore
@@ -61,7 +61,7 @@ jobs:
     needs: [quick-build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Run GPU boot scenarios
         run: bash install/tests/test-helios-gpu-boot.sh
 
@@ -73,7 +73,7 @@ jobs:
     needs: [quick-build, csharp-tests, bash-tests]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # On PRs, stamp a unique version so the artifact is identifiable.
       - name: Stamp PR version
@@ -84,10 +84,10 @@ jobs:
           sed -i "s|<Version>.*</Version>|<Version>${VERSION}</Version>|" src/Helios.csproj
           sed -i "s/VERSION_PLACEHOLDER/${VERSION}/" install/90-helios.rules
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0'
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         with:
           path: ~/.nuget/packages
           key: nuget-${{ runner.os }}-${{ hashFiles('src/Helios.csproj') }}
@@ -127,21 +127,21 @@ jobs:
           echo "All embedded resources verified"
 
       - name: Upload binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: helios
           path: dist/helios
           retention-days: 7
 
       - name: Upload udev rules
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: udev-rules
           path: install/90-helios.rules
           retention-days: 7
 
       - name: Upload boot files
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: gpu-boot-files
           path: |
@@ -157,7 +157,7 @@ jobs:
 
       - name: Upload PR metadata
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pr-meta
           path: pr-meta.txt
@@ -172,8 +172,8 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
           name: helios
           path: artifacts/helios
@@ -195,7 +195,7 @@ jobs:
           export ARCH=x86_64
           ./appimagetool Helios.AppDir Helios-x86_64.AppImage
       - name: Upload AppImage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: appimage
           path: Helios-x86_64.AppImage
