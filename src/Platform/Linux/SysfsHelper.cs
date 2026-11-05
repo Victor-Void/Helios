@@ -687,14 +687,15 @@ public static class SysfsHelper
 
     public static readonly string SudoPath = ResolveSudoPath();
 
-    public static readonly string GpuHelperPath = ResolveGpuHelperPath();
+    // Re-resolved per call so a Repair that moves the helper applies without restart.
+    public static string GpuHelperPath => ResolveGpuHelperPath();
 
     /// <summary>Where gpu-helper should be installed on this machine.
-    /// Sealed-root SteamOS cannot write /opt; /etc is a writable overlay.</summary>
+    /// Sealed-root SteamOS cannot write /usr/local; /etc is a writable overlay.</summary>
     internal static string DefaultGpuHelperInstallPath =>
         ImmutableOs.IsSteamOs && ImmutableOs.IsRootReadOnly()
             ? "/etc/helios/gpu-helper"
-            : "/opt/helios/gpu-helper";
+            : "/usr/local/lib/helios/gpu-helper";
 
     private static string ResolveGpuHelperPath()
     {
@@ -704,21 +705,22 @@ public static class SysfsHelper
             return nixPath;
 
         // /etc/helios is the sealed-root SteamOS location (writable overlay).
-        foreach (var p in new[] { "/opt/helios/gpu-helper", "/etc/helios/gpu-helper", "/usr/local/lib/helios/gpu-helper" })
+        // TODO needs to be removed at some point: /opt/helios is the legacy user-owned location, used only until Repair.
+        foreach (var p in new[] { "/usr/local/lib/helios/gpu-helper", "/etc/helios/gpu-helper", "/opt/helios/gpu-helper" })
             if (System.IO.File.Exists(p))
                 return p;
 
         return DefaultGpuHelperInstallPath;
     }
 
-    public static readonly string RyzenadjPath = ResolveRyzenadjPath();
+    public static string RyzenadjPath => ResolveRyzenadjPath();
 
     /// <summary>Where the bundled ryzenadj CLI should be installed.
-    /// Sealed-root SteamOS cannot write /opt; /etc is a writable overlay.</summary>
+    /// Sealed-root SteamOS cannot write /usr/local; /etc is a writable overlay.</summary>
     internal static string DefaultRyzenadjInstallPath =>
         ImmutableOs.IsSteamOs && ImmutableOs.IsRootReadOnly()
             ? "/etc/helios/ryzenadj"
-            : "/opt/helios/ryzenadj";
+            : "/usr/local/lib/helios/ryzenadj";
 
     private static string ResolveRyzenadjPath()
     {
@@ -727,7 +729,7 @@ public static class SysfsHelper
         if (nixPath != null)
             return nixPath;
 
-        foreach (var p in new[] { "/opt/helios/ryzenadj", "/etc/helios/ryzenadj" })
+        foreach (var p in new[] { "/usr/local/lib/helios/ryzenadj", "/etc/helios/ryzenadj", "/opt/helios/ryzenadj" })
             if (System.IO.File.Exists(p))
                 return p;
 
