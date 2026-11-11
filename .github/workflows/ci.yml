@@ -29,7 +29,7 @@ jobs:
           key: nuget-${{ runner.os }}-${{ hashFiles('src/Helios.csproj') }}
           restore-keys: nuget-${{ runner.os }}-
       - name: Install build deps
-        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev libwayland-dev upx-ucl libpipewire-0.3-dev pkg-config
+        run: bash .github/scripts/apt-install.sh clang zlib1g-dev libwayland-dev upx-ucl libpipewire-0.3-dev pkg-config
       - name: Build (fast, non-AOT)
         run: ./build.sh --fast
         env:
@@ -94,7 +94,7 @@ jobs:
           restore-keys: nuget-${{ runner.os }}-
 
       - name: Install AOT deps
-        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev libwayland-dev upx-ucl libpipewire-0.3-dev pkg-config
+        run: bash .github/scripts/apt-install.sh clang zlib1g-dev libwayland-dev upx-ucl libpipewire-0.3-dev pkg-config
 
       - name: Build AOT binary
         run: ./build.sh
@@ -178,7 +178,7 @@ jobs:
           name: helios
           path: artifacts/helios
       - name: Install libfuse2
-        run: sudo apt-get update && sudo apt-get install -y libfuse2
+        run: bash .github/scripts/apt-install.sh libfuse2
       - name: Download appimagetool
         run: |
           curl -fsSL "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage" -o appimagetool
