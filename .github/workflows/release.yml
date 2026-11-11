@@ -33,7 +33,10 @@ jobs:
   # Build the native AOT binary
   build:
     needs: [version]
-    runs-on: ubuntu-latest
+    # Pin 24.04 explicitly: helpers compiled here (helios-audio) must run on
+    # glibc older than 2.43, and `ubuntu-latest` has moved to 26.04, which
+    # breaks Ubuntu 24.04, Debian 13, Fedora 43 and similar targets.
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
