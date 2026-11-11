@@ -1,5 +1,26 @@
 # Helios Changelog
 
+## v1.1.2
+
+- Fixed: the live `asus-nb-wmi` PPT registers (PL1/PL2/fPPT) could stay stuck
+  at the 5 W Windows table floor while `asus-armoury` held the real per-mode
+  value. AMD firmware enforces `min(all limits)`, so on dual-backend kernels the
+  CPU was hard-capped to 5 W (~530 MHz under load) regardless of the selected
+  mode, fan curve or thermal policy. Every mode apply now re-raises a
+  floor-level register to the firmware value, validated against that
+  attribute's `min_value`/`max_value` first.
+- Fixed: the NVIDIA Vulkan ICD and EGL vendor files could stay hidden after a
+  return to Standard mode when the transition ended anywhere other than the
+  live Eco -> Standard path (deferred to reboot, failed re-enable, crash).
+  Startup now reconciles the files against the real `dgpu_disable` state
+  instead of trusting the previous switch, so Vulkan/EGL apps can no longer
+  silently lose the dGPU.
+- Diagnostics: no longer reads the write-only `kbd_rgb_mode`/`kbd_rgb_state`
+  sysfs nodes (two spurious EIO errors per run), and no longer reports a
+  `tmpfiles.d` file the app does not install.
+- Version metadata bumped to 1.1.2 so the self-update check compares against
+  the actual release instead of the 1.0.0 fallback.
+
 ## v1.1.0
 
 - English-only build: removed 37 translations and the runtime language switcher

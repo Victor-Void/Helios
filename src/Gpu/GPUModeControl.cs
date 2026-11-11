@@ -505,6 +505,16 @@ public class GPUModeControl
             return GpuSwitchResult.AlreadySet;
         }
 
+        // Self-heal a stuck NVIDIA Vulkan/EGL state before anything else. Eco
+        // renames the ICD/EGL vendor files to *_inactive and Standard renames
+        // them back, but the restore only runs on the live Eco -> Standard
+        // path. A transition that died in between (failed re-enable, deferred
+        // to reboot, crash, manual dgpu_disable poke) leaves them hidden while
+        // the dGPU is enabled - and then no Vulkan/EGL app ever picks the dGPU
+        // again, silently. Reconcile against the real firmware state, and only
+        // touch the files (one privileged call) when they disagree.
+        ReconcileVulkanIcd();
+
         // PCI backend: the boot service is solely responsible for applying
         // any pending mode at boot. By the time helios starts up, the
         // transition has already happened (or failed and been recorded in
@@ -2583,6 +2593,51 @@ public class GPUModeControl
 
     private const string NvidiaVulkanIcd = "/usr/share/vulkan/icd.d/nvidia_icd.json";
     private const string NvidiaEglVendor = "/usr/share/glvnd/egl_vendor.d/10_nvidia.json";
+
+    /// <summary>
+    /// Bring the NVIDIA ICD/EGL files in line with the actual dGPU state when
+    /// the two have drifted apart (see <see cref="ApplyVulkanIcd"/>). No-op when
+    /// they already agree, so the normal startup path costs nothing.
+    /// </summary>
+    private void ReconcileVulkanIcd()
+    {
+        if (NixOS.IsNixOS)
+            return;
+
+        bool vulkanPresent = File.Exists(NvidiaVulkanIcd);
+        bool vulkanHidden = !vulkanPresent && File.Exists(NvidiaVulkanIcd + "_inactive");
+        bool eglPresent = File.Exists(NvidiaEglVendor);
+        bool eglHidden = !eglPresent && File.Exists(NvidiaEglVendor + "_inactive");
+
+        // Nothing to reconcile on machines without the NVIDIA userspace files.
+        if (!vulkanPresent && !vulkanHidden && !eglPresent && !eglHidden)
+            return;
+
+        bool dgpuAvailable;
+        try
+        {
+            dgpuAvailable = !_wmi.GetGpuEco();
+        }
+        catch (Exception ex)
+        {
+            Logger.WriteLine($"GPUModeControl: ICD reconcile - dGPU state unreadable: {ex.Message}");
+            return;
+        }
+
+        bool hidden = vulkanHidden || eglHidden;
+        if (dgpuAvailable && hidden)
+        {
+            Logger.WriteLine($"GPUModeControl: ICD reconcile - dGPU available but files hidden "
+                + $"(vulkan={vulkanHidden}, egl={eglHidden}) - restoring");
+            ApplyVulkanIcd(dgpuAvailable: true);
+        }
+        else if (!dgpuAvailable && !hidden)
+        {
+            Logger.WriteLine($"GPUModeControl: ICD reconcile - Eco active but files visible "
+                + $"(vulkan={vulkanPresent}, egl={eglPresent}) - hiding");
+            ApplyVulkanIcd(dgpuAvailable: false);
+        }
+    }
 
     /// <summary>
     /// Hide (Eco) / show (Standard) the NVIDIA Vulkan ICD and EGL vendor files

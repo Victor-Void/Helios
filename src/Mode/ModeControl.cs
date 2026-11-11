@@ -210,6 +210,10 @@ public class ModeControl
 
             // Phase 2: power limits, undervolt, boost, ASPM
             AutoCpuPower(mode);
+            // Separate from auto_apply_power: the EC can leave the live PPT
+            // registers at a floor value after a profile change on dual-backend
+            // kernels, which hard-caps the CPU no matter what the mode says.
+            HealStalePptFloor();
             AutoGpuPower(mode);
 
             // CPU undervolt (independent of auto_apply_power - uses its own auto_uv flag)
@@ -466,6 +470,76 @@ public class ModeControl
         if (safe > 0 && safe != saved)
             Helpers.Logger.WriteLine($"AutoPower: {key}={saved}W outside {bounds.Min}-{bounds.Max}W, clamped to {safe}W");
         return safe;
+    }
+
+    /// <summary>
+    /// Re-raise PPT registers that are stuck at the 5 W floor.
+    ///
+    /// On dual-backend kernels the live asus-nb-wmi PPT attributes and the
+    /// asus-armoury firmware-attributes are separate registers, and the EC
+    /// honours whichever is lowest. A profile change (or a Silent-mode write
+    /// that was later rolled back) can leave the legacy register at 5 W while
+    /// the firmware attribute holds the real mode value (e.g. 80 W for Turbo).
+    /// AMD firmware then enforces min(all limits), so the CPU runs at 5 W and
+    /// every fan curve, governor and thermal-policy setting is irrelevant.
+    ///
+    /// 5 W is the Windows table floor, never a user choice (the UI slider is
+    /// bounded by the attribute's min_value), so anything at or below
+    /// <see cref="MinTotal"/> while the firmware reports more is stale state.
+    /// Mirrors the firmware value to both backends via the normal write path.
+    /// </summary>
+    private static void HealStalePptFloor()
+    {
+        var wmi = App.Wmi;
+        if (wmi == null || !Helpers.AppConfig.IsAsusDevice())
+            return;
+        if (!Directory.Exists(Platform.Linux.SysfsHelper.FirmwareAttributes))
+            return;
+
+        foreach (var attr in new[]
+        {
+            Platform.Linux.AsusAttributes.PptPl1Spl,
+            Platform.Linux.AsusAttributes.PptPl2Sppt,
+            Platform.Linux.AsusAttributes.PptFppt,
+        })
+        {
+            try
+            {
+                string fwPath = Path.Combine(
+                    Platform.Linux.SysfsHelper.FirmwareAttributes, attr.FwAttrName, "current_value");
+                if (!File.Exists(fwPath))
+                    continue; // legacy-only kernel: nothing authoritative to mirror
+
+                int fw = Platform.Linux.SysfsHelper.ReadInt(fwPath, -1);
+                string legacyPath = Path.Combine(
+                    Platform.Linux.SysfsHelper.AsusWmiPlatform, attr.LegacyName);
+                if (!File.Exists(legacyPath))
+                    continue; // no separate live register on this kernel
+                int legacy = Platform.Linux.SysfsHelper.ReadInt(legacyPath, -1);
+                if (fw <= MinTotal || legacy < 0 || legacy > MinTotal)
+                    continue;
+
+                // Never mirror a value the board itself would reject.
+                var bounds = PowerLimitBounds.For(wmi, attr, MinTotal, GetMaxTotal());
+                if (!bounds.Contains(fw))
+                {
+                    Helpers.Logger.WriteLine($"AutoPower: {attr.LegacyName} stuck at {legacy}W, "
+                        + $"firmware {fw}W outside {bounds.Min}-{bounds.Max}W - not mirroring");
+                    continue;
+                }
+
+                Helpers.Logger.WriteLine($"AutoPower: {attr.LegacyName} stuck at {legacy}W "
+                    + $"(floor) while firmware holds {fw}W - re-raising to {fw}W");
+                if (wmi.SetPptLimit(attr, fw))
+                    Helpers.Logger.WriteLine($"AutoPower: {attr.LegacyName} healed to {fw}W");
+                else
+                    Helpers.Logger.WriteLine($"AutoPower: {attr.LegacyName} heal write failed");
+            }
+            catch (Exception ex)
+            {
+                Helpers.Logger.WriteLine($"AutoPower: {attr.LegacyName} heal failed: {ex.Message}");
+            }
+        }
     }
 
     /// <summary>Apply saved CPU power limits for the given mode (gated by per-mode auto_apply_power).</summary>

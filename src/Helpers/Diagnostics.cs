@@ -446,13 +446,13 @@ public static class Diagnostics
                 continue;
 
             var perms = GetFilePermissions(path);
-            var value = Platform.Linux.SysfsHelper.ReadAttribute(path);
-
-            // kbd_rgb_mode and kbd_rgb_state are DEVICE_ATTR_WO in the kernel - read always fails
-            if (value == null && (path.EndsWith("kbd_rgb_mode") || path.EndsWith("kbd_rgb_state")))
-                value = "(write-only, present)";
-            else
-                value ??= "(read failed)";
+            // kbd_rgb_mode and kbd_rgb_state are DEVICE_ATTR_WO in the kernel,
+            // so reading them always fails with EIO. Skip the read instead of
+            // letting SysfsHelper log a bogus error on every diagnostics run.
+            string? value = (path.EndsWith("kbd_rgb_mode") || path.EndsWith("kbd_rgb_state"))
+                ? "(write-only, present)"
+                : Platform.Linux.SysfsHelper.ReadAttribute(path);
+            value ??= "(read failed)";
 
             var shortPath = path
                 .Replace("/sys/class/power_supply/", "power_supply/")
@@ -1521,9 +1521,6 @@ public static class Diagnostics
                     sb.AppendLine($"  \u26a0 udev rules version mismatch (app: {appVer}, rules: {udevVersion})");
             }
         }
-
-        var tmpfilesExists = File.Exists("/etc/tmpfiles.d/90-helios.conf");
-        sb.AppendLine($"  tmpfiles.d: {(tmpfilesExists ? "installed" : "NOT FOUND")}");
 
         var symlinkTarget = Platform.Linux.SysfsHelper.RunCommand("readlink", "-f /usr/local/bin/helios");
         sb.AppendLine($"  /usr/local/bin/helios: {symlinkTarget ?? "NOT FOUND"}");
